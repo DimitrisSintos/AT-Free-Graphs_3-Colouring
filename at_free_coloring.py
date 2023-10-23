@@ -12,19 +12,6 @@ class Graph:
             u, v = edge
             self.adjacency_list[u].add(v)
             self.adjacency_list[v].add(u)
-        
-    def add_vertex(self, vertex):
-        self.vertices.add(vertex)
-        
-    def add_edge(self, edge):
-        self.edges.add(edge)
-        self.vertices.update(edge)
-        
-    def neighbors(self, vertex):
-        return {v for u, v in self.edges if u == vertex} | {u for u, v in self.edges if v == vertex}
-        
-    def get_edges(self, vertex):
-        return {(u, v) for u, v in self.edges if u == vertex or v == vertex}
     
     def contract(self, vertices_to_contract):
         """
@@ -54,82 +41,65 @@ class Graph:
         return Graph(new_vertices, new_edges)
     
     def block_cutpoint_decomposition(self):
-        """
-        Decomposes the graph into its biconnected components.
-
-        Returns:
-            - A list of blocks, where each block is represented as a set of edges.
-            - A set of cutpoints (articulation points).
-        """
-        time = 0  # Discovery time
-        blocks = []  # To store the biconnected components
+        visited = {vertex : False for vertex in self.vertices}
+        disc = {vertex : -1 for vertex in self.vertices}
+        low = {vertex : -1 for vertex in self.vertices}
+        parent = {vertex : None for vertex in self.vertices}
+        st = []
+        time = 0
+        blocks = []
         cutpoints = set()
-        
-        # Discovery and low values for each vertex
-        disc = [-1] * len(self.vertices)
-        low = [-1] * len(self.vertices)
-        parent = [-1] * len(self.vertices)
-        visited = {v: False for v in self.vertices}
-        st = []  # An auxiliary stack
-        
-        def block_cutpoint_util(v):
-            print("v:",v)
-            nonlocal time
+
+        def tarjan_DFS(u, visited, disc, low, st, parent,time, blocks,cutpoints):
             children = 0
-            visited[v] = True
-            disc[v] = time
-            low[v] = time
+            visited[u] = True
+            st.append(u)
+
+            disc[u] = time
+            low[u] = time
             time += 1
-            for u in self.adjacency_list[v]:
-                print("u:",u)
-                # If u is not visited, make v its parent in DFS tree and recurse for it
-                if not visited[u]:
-                    children += 1
-                    parent[u] = v
-                    st.append((v, u))  # Store the edge in stack
-                    block_cutpoint_util(u)
-                    
-                    # Update low value of v
-                    low[v] = min(low[v], low[u])
-                    
-                    # If v is root of DFS tree and has two or more children
-                    if parent[v] == -1 and children > 1:
-                        cutpoints.add(v)
-                        w = -1
-                        block = set()
-                        # Pop all edges from stack till we reach (v, u)
-                        while w != u:
-                            w, x = st.pop()
-                            block.add((w, x))
+
+            for v in self.adjacency_list[u]:
+                print("parent of u", parent[u])
+                if not visited[v]:
+                    children +=1
+                    parent[v] = u
+                    tarjan_DFS(v, visited, disc, low, st, parent,time, blocks,cutpoints)
+
+                    low[u] = min(low[u], low[v])
+
+                    if parent[u] is None and children > 1:
+                        cutpoints.add(u)
+                        while st[-1] != u:
+                            st.pop()
+                        st.pop()
+
+                    elif parent[u] is not None and low[v] >= disc[u]:
+                        cutpoints.add(u)
+                        block = []
+                        while st[-1] != u:
+                            block.append(st.pop())
+                        block.append(st.pop())
                         blocks.append(block)
+
+                elif v != parent[u]:#back edge
+                    low[u] = min(low[u], disc[v])
+
                     
-                    # If v is not root and low value of one of its child is more than discovery value of v
-                    elif parent[v] != -1 and low[u] >= disc[v]:
-                        cutpoints.add(v)
-                        w = -1
-                        block = set()
-                        while w != u:
-                            w, x = st.pop()
-                            block.add((w, x))
-                        blocks.append(block)
-                        
-                elif u != parent[v]:
-                    low[v] = min(low[v], disc[u])
-                    print("Mpanei pote edw??", low[v], disc[u])
-                    if disc[u] < disc[v]:
-                        st.append((v, u))
-        
-        for v in self.vertices:
-            if not visited[v]:
-                block_cutpoint_util(v)
-                block = set()
+
+
+        for vertex in self.vertices:
+            if not visited[vertex]:
+                tarjan_DFS(vertex, visited, disc, low, st, parent,time, blocks,cutpoints)
+            
+            if st:
+                block = []
                 while st:
-                    block.add(st.pop())
-                if block:
-                    blocks.append(block)
-                    
-        return blocks, cutpoints
-    
+                    block.append(st.pop())
+                blocks.append(block)
+
+        return blocks, cutpoints 
+
     def show(self):
         net = Network()
         net.add_nodes(self.vertices)
@@ -180,7 +150,7 @@ def line_3_check(graph):
 
 
 
-
+################### TESTS #####################
 
 
 # 5-wheel graph
@@ -202,8 +172,31 @@ def line_3_check(graph):
 #     print("IS K4 on recursion:",is_K4_on_recursion(new_G_5_wheel,s))
 #     new_G_5_wheel.show()
 
-# Testing:
-g = Graph([0, 1, 2, 3, 4, 5], [(0, 1), (1, 2), (0, 2), (2, 3), (3, 4), (4, 5), (3, 5)])
+#my graph
+# vertices = ['a','b','c','d','e','f','g','h']
+# edges = [('a','c'),('b','c'),('c','d'),('c','e'),('c','f'),('b','g'),('e','f'),('e','g'),('f','h'),('d','h'),('g','h')]
+
+# G= Graph(vertices, edges)
+
+# G.show()
+
+# is_condition_met, data = line_3_check(G)
+# print("is_condition_met:",is_condition_met)
+
+
+
+
+
+# # Testing block-cutpoint decomposition:
+# g = Graph([0, 1, 2, 3, 4, 5], [(0, 1), (1, 2), (0, 2), (2, 3), (3, 4), (4, 5), (3, 5)])
+# blocks, cutpoints = g.block_cutpoint_decomposition()
+# print("Blocks:", blocks)
+# print("Cutpoints:", cutpoints)
+
+vertices = ['a','b','c','d','e','f','g','h']
+edges = [('a','c'),('b','c'),('c','d'),('c','e'),('c','f'),('b','g'),('e','f'),('e','g'),('f','h'),('d','h'),('g','h')]
+g = Graph(vertices, edges)
+# g.show()
 blocks, cutpoints = g.block_cutpoint_decomposition()
 print("Blocks:", blocks)
 print("Cutpoints:", cutpoints)
