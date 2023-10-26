@@ -54,27 +54,35 @@ class Graph:
             children = 0
             visited[u] = True
             st.append(u)
+            print("not visited vertex in st:",st)
+
 
             disc[u] = time
             low[u] = time
             time += 1
 
             for v in self.adjacency_list[u]:
-                print("parent of u", parent[u])
                 if not visited[v]:
                     children +=1
                     parent[v] = u
                     tarjan_DFS(v, visited, disc, low, st, parent,time, blocks,cutpoints)
 
                     low[u] = min(low[u], low[v])
+                    
+                    print("aaaaaaaaaaaaaaaa",u)
 
                     if parent[u] is None and children > 1:
+                        print("children", children)
                         cutpoints.add(u)
+                        block = []
                         while st[-1] != u:
-                            st.pop()
-                        st.pop()
+                            block.append(st.pop())
+                        block.append(st.pop())
+                        blocks.append(block)
 
                     elif parent[u] is not None and low[v] >= disc[u]:
+                        print("low[v]", low[v])
+                        print("disc[u]", disc[u])
                         cutpoints.add(u)
                         block = []
                         while st[-1] != u:
@@ -90,6 +98,7 @@ class Graph:
 
         for vertex in self.vertices:
             if not visited[vertex]:
+                print("not viseted vertex:",vertex)
                 tarjan_DFS(vertex, visited, disc, low, st, parent,time, blocks,cutpoints)
             
             if st:
@@ -132,6 +141,8 @@ def is_K4_on_recursion(graph, s):
                 return True
     return False
 
+
+
 def line_3_check(graph):
     for edge in graph.edges:
         u, v = edge
@@ -148,7 +159,48 @@ def line_3_check(graph):
             return True, (u, v, common_neighbors)
     return False, None
 
+def is_stable_cutset(graph, block, x):
+    # Define the neighbors of x within the block
+    neighbors = graph.adjacency_list[x].intersection(block)
+    unique_edges = [(u, v) for u in neighbors for v in graph.adjacency_list[u].intersection(neighbors)]
+    
+    # Check if NB(x) is a stable cutset of B
+    if len(unique_edges) <= 1 and not any((u, v) in graph.edges or (v, u) in graph.edges for u, v in combinations(neighbors, 2)):
+        return True, neighbors
+    
+    # Check the other conditions (NB(x) \ {u} and NB(x) \ {v})
+    for u, v in unique_edges:
+        cutset_minus_u = neighbors - {u}
+        cutset_minus_v = neighbors - {v}
+        
+        if not any((a, b) in graph.edges or (b, a) in graph.edges for a, b in combinations(cutset_minus_u, 2)):
+            return True, cutset_minus_u
+        if not any((a, b) in graph.edges or (b, a) in graph.edges for a, b in combinations(cutset_minus_v, 2)):
+            return True, cutset_minus_v
 
+    return False, None
+
+def line_5_check(graph):
+    blocks, _ = graph.block_cutpoint_decomposition()
+
+    for block in blocks:
+        print("block:", block)
+        if len(block) < 3:
+            continue
+        for x in graph.vertices:
+            if x not in block:
+                continue
+            is_cutset, cutset = is_stable_cutset(graph, block, x)
+            if is_cutset:
+                # Reducing to a minimal stable separator
+                for vertex in cutset:
+                    temp_cutset = cutset - {vertex}
+                    temp_is_cutset, _ = is_stable_cutset(graph, block, x)
+                    if temp_is_cutset:
+                        cutset = temp_cutset
+                if len(cutset) >= 2:
+                    return True, cutset
+    return False, None
 
 ################### TESTS #####################
 
@@ -165,7 +217,6 @@ def line_3_check(graph):
 # if is_condition_met:
 #     print("data:",data)
 #     u, v, common_neighbors = data
-#     s = "".join(common_neighbors)
 #     new_G_5_wheel = G_5_wheel.contract(common_neighbors)
 
 
@@ -187,16 +238,17 @@ def line_3_check(graph):
 
 
 
-# # Testing block-cutpoint decomposition:
-# g = Graph([0, 1, 2, 3, 4, 5], [(0, 1), (1, 2), (0, 2), (2, 3), (3, 4), (4, 5), (3, 5)])
-# blocks, cutpoints = g.block_cutpoint_decomposition()
-# print("Blocks:", blocks)
-# print("Cutpoints:", cutpoints)
 
+# Testing line 5:
 vertices = ['a','b','c','d','e','f','g','h']
 edges = [('a','c'),('b','c'),('c','d'),('c','e'),('c','f'),('b','g'),('e','f'),('e','g'),('f','h'),('d','h'),('g','h')]
 g = Graph(vertices, edges)
-# g.show()
-blocks, cutpoints = g.block_cutpoint_decomposition()
-print("Blocks:", blocks)
-print("Cutpoints:", cutpoints)
+is_condition_met, cutset = line_5_check(g)
+print("is_condition 5 met :",is_condition_met)
+print("cutset:",cutset, type(cutset))
+if is_condition_met and cutset:
+    new_g = g.contract(cutset)
+    new_g.show()
+
+
+
