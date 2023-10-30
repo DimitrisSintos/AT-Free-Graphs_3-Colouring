@@ -1,6 +1,8 @@
 from itertools import combinations
 from pyvis.network import Network
 
+from biconnectivity import TarjansBiconnectivity
+
 
 
 class Graph:
@@ -40,80 +42,29 @@ class Graph:
         
         return Graph(new_vertices, new_edges)
     
-    def block_cutpoint_decomposition(self):
-        visited = {vertex : False for vertex in self.vertices}
-        disc = {vertex : -1 for vertex in self.vertices}
-        low = {vertex : -1 for vertex in self.vertices}
-        parent = {vertex : None for vertex in self.vertices}
-        st = []
-        time = 0
-        blocks = []
-        cutpoints = set()
-
-        def tarjan_DFS(u, visited, disc, low, st, parent,time, blocks,cutpoints):
-            children = 0
-            visited[u] = True
-            st.append(u)
-            print("not visited vertex in st:",st)
-
-
-            disc[u] = time
-            low[u] = time
-            time += 1
-
-            for v in self.adjacency_list[u]:
-                if not visited[v]:
-                    children +=1
-                    parent[v] = u
-                    tarjan_DFS(v, visited, disc, low, st, parent,time, blocks,cutpoints)
-
-                    low[u] = min(low[u], low[v])
-                    
-                    print("aaaaaaaaaaaaaaaa",u)
-
-                    if parent[u] is None and children > 1:
-                        print("children", children)
-                        cutpoints.add(u)
-                        block = []
-                        while st[-1] != u:
-                            block.append(st.pop())
-                        block.append(st.pop())
-                        blocks.append(block)
-
-                    elif parent[u] is not None and low[v] >= disc[u]:
-                        print("low[v]", low[v])
-                        print("disc[u]", disc[u])
-                        cutpoints.add(u)
-                        block = []
-                        while st[-1] != u:
-                            block.append(st.pop())
-                        block.append(st.pop())
-                        blocks.append(block)
-
-                elif v != parent[u]:#back edge
-                    low[u] = min(low[u], disc[v])
-
-                    
-
-
-        for vertex in self.vertices:
-            if not visited[vertex]:
-                print("not viseted vertex:",vertex)
-                tarjan_DFS(vertex, visited, disc, low, st, parent,time, blocks,cutpoints)
-            
-            if st:
-                block = []
-                while st:
-                    block.append(st.pop())
-                blocks.append(block)
-
-        return blocks, cutpoints 
+    
 
     def show(self):
         net = Network()
         net.add_nodes(self.vertices)
         net.add_edges(self.edges)
         net.show("graph.html")
+
+
+class Block:
+    def _innit__(self,edges):
+        self.edges = edges
+        self.vertices = set()
+        self.adjacency_list = {}
+        for edge in edges:
+            u, v = edge
+            self.vertices.add(u)
+            self.vertices.add(v)
+            self.adjacency_list[u].add(v)
+            self.adjacency_list[v].add(u)
+            
+
+
 
 
 def is_K4(graph):
@@ -181,26 +132,18 @@ def is_stable_cutset(graph, block, x):
     return False, None
 
 def line_5_check(graph):
-    blocks, _ = graph.block_cutpoint_decomposition()
+    # Find the biconnected components of the graph
+    biconnectivity_algorithm = TarjansBiconnectivity(graph)
+    biconnected_components = biconnectivity_algorithm.find_biconnected_components()
+    blocks = [Block(edges) for edges in biconnected_components]
 
-    for block in blocks:
-        print("block:", block)
-        if len(block) < 3:
-            continue
-        for x in graph.vertices:
-            if x not in block:
-                continue
-            is_cutset, cutset = is_stable_cutset(graph, block, x)
-            if is_cutset:
-                # Reducing to a minimal stable separator
-                for vertex in cutset:
-                    temp_cutset = cutset - {vertex}
-                    temp_is_cutset, _ = is_stable_cutset(graph, block, x)
-                    if temp_is_cutset:
-                        cutset = temp_cutset
-                if len(cutset) >= 2:
-                    return True, cutset
-    return False, None
+    for vertex in graph.vertices:
+        for block in blocks:
+            if vertex in block.vertices and len(block.vertices) >= 3:
+
+
+
+    return 0
 
 ################### TESTS #####################
 
@@ -243,12 +186,10 @@ def line_5_check(graph):
 vertices = ['a','b','c','d','e','f','g','h']
 edges = [('a','c'),('b','c'),('c','d'),('c','e'),('c','f'),('b','g'),('e','f'),('e','g'),('f','h'),('d','h'),('g','h')]
 g = Graph(vertices, edges)
-is_condition_met, cutset = line_5_check(g)
-print("is_condition 5 met :",is_condition_met)
-print("cutset:",cutset, type(cutset))
-if is_condition_met and cutset:
-    new_g = g.contract(cutset)
-    new_g.show()
+
+biconnectivity_algorithm = TarjansBiconnectivity(g)
+biconnected_components = biconnectivity_algorithm.find_biconnected_components()
+print(biconnected_components)
 
 
 
