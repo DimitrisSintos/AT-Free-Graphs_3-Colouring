@@ -43,6 +43,8 @@ class Graph:
         return Graph(new_vertices, new_edges)
     
     
+    
+    
 
     def show(self):
         net = Network()
@@ -51,17 +53,51 @@ class Graph:
         net.show("graph.html")
 
 
-class Block:
-    def _innit__(self,edges):
-        self.edges = edges
-        self.vertices = set()
-        self.adjacency_list = {}
-        for edge in edges:
-            u, v = edge
-            self.vertices.add(u)
-            self.vertices.add(v)
-            self.adjacency_list[u].add(v)
-            self.adjacency_list[v].add(u)
+class Block(Graph):
+    def __innit__(self,vertices, edges):
+        super().__init__(vertices, edges)
+
+
+    def delete_vertices(self, vertices_to_delete):
+        """
+        Delete a set of vertices from the block.
+        
+        :param vertices_to_delete: set of vertices to delete
+        :return: A new Block instance with the vertices deleted.
+        """
+        new_veriteces = self.vertices - vertices_to_delete
+        new_edges = [e for e in self.edges if e[0] not in vertices_to_delete and e[1] not in vertices_to_delete]
+        return Block(new_veriteces,new_edges)
+    
+    def dfs(self, start=None, visited=None):
+        print("Ftanw edw?!?!?", start)
+        if start is None:
+            start = next(iter(self.vertices))
+        if visited is None:
+            visited = set()
+        visited.add(start)
+        print("papapapaouuu")
+        #check if adjacency_list is an empty set
+        if not self.adjacency_list[start]:
+            print("adjacency_list is empty set")
+            return visited
+        
+        for neighbor in self.adjacency_list[start]:
+            print("edw xalarwnei?!?!?")
+            if neighbor not in visited:
+                self.dfs(neighbor, visited)
+        return visited
+
+    def is_connected(self, start):
+        print("adjacency_list:",self.adjacency_list)
+        print("Start:",start)
+        if not self.vertices:
+            return True
+        visited = self.dfs(start)
+        print("visited:",visited)
+        return len(visited) == len(self.vertices)
+
+
             
 
 
@@ -110,40 +146,93 @@ def line_3_check(graph):
             return True, (u, v, common_neighbors)
     return False, None
 
-def is_stable_cutset(graph, block, x):
-    # Define the neighbors of x within the block
-    neighbors = graph.adjacency_list[x].intersection(block)
-    unique_edges = [(u, v) for u in neighbors for v in graph.adjacency_list[u].intersection(neighbors)]
-    
-    # Check if NB(x) is a stable cutset of B
-    if len(unique_edges) <= 1 and not any((u, v) in graph.edges or (v, u) in graph.edges for u, v in combinations(neighbors, 2)):
-        return True, neighbors
-    
-    # Check the other conditions (NB(x) \ {u} and NB(x) \ {v})
-    for u, v in unique_edges:
-        cutset_minus_u = neighbors - {u}
-        cutset_minus_v = neighbors - {v}
-        
-        if not any((a, b) in graph.edges or (b, a) in graph.edges for a, b in combinations(cutset_minus_u, 2)):
-            return True, cutset_minus_u
-        if not any((a, b) in graph.edges or (b, a) in graph.edges for a, b in combinations(cutset_minus_v, 2)):
-            return True, cutset_minus_v
+def has_minimal_stable_separator(block, x):
+    x_neighbors = block.adjacency_list[x]
+    cond, stable_cutset = is_stable_cutset(block, x, x_neighbors)
+    print("cond:",cond)
+    print("stable_cutset:",stable_cutset)
+    if cond:
+        has_minimal_stable_separator = reduce_it_to_minimal_stable_separator(block, x, stable_cutset)
+        return True, has_minimal_stable_separator
+    else:
+        return False
 
-    return False, None
+
+def is_stable_cutset(block, x,S):
+    unique_edge  = None
+    #find if a unique edge exists in S
+    for u, v in combinations(S, 2):
+        if (u, v) in block.edges or (v, u) in block.edges:
+            unique_edge = (u, v)
+    print("exw unique_edge:",unique_edge)
+    if unique_edge is None:
+        #check if S is stable cutset of block
+        print("\nS:",S)
+        block_without_S = block.delete_vertices(S)
+        print("block_without_S:",block_without_S.adjacency_list)
+        if not block_without_S.is_connected(x):
+            return True , S
+        else:
+            return False, None
+    else:
+        u, v = unique_edge
+        S_without_u = S - {u}
+        S_without_v = S - {v}
+        block_without_S_u = block.delete_vertices(S_without_u)
+        print("block_without_S_u:",block_without_S_u.adjacency_list)
+
+        if not block_without_S_u.is_connected(x):
+            return True, S_without_u
+        
+        block_without_S_v = block.delete_vertices(S_without_v)
+        print("block_without_S_v:",block_without_S_v.adjacency_list)
+        if not block_without_S_v.is_connected(x):
+            return True, S_without_v
+        
+        return False, None
+    
+def reduce_it_to_minimal_stable_separator(block, x, S):
+    separator = S.copy()
+    for u in separator:
+        if len(S) >= 3:
+            S_without_u = S - {u}
+            block_without_S_u = block.delete_vertices(S_without_u)
+            if not block_without_S_u.is_connected(x):
+                S = S_without_u.copy()
+        else:
+            break
+    return S
+
 
 def line_5_check(graph):
     # Find the biconnected components of the graph
     biconnectivity_algorithm = TarjansBiconnectivity(graph)
     biconnected_components = biconnectivity_algorithm.find_biconnected_components()
-    blocks = [Block(edges) for edges in biconnected_components]
+    print("biconnected_components:",biconnected_components, len(biconnected_components))
+    blocks = []
+    for component in biconnected_components:
+        vertices = set()
+        edges = set()
+        for edge in component:
+            u, v = edge
+            vertices.add(u)
+            vertices.add(v)
+            edges.add(edge)
+        blocks.append(Block(vertices, edges))
 
     for vertex in graph.vertices:
         for block in blocks:
             if vertex in block.vertices and len(block.vertices) >= 3:
+                print("Pio vertexaki elenxw?!?!",vertex)
+                cond , minimal_stable_separator = has_minimal_stable_separator(block, vertex)
+                print("cond:",cond)
+                print("minimal_stable_separator:",minimal_stable_separator)
+                if cond:
+                    return True, (block, minimal_stable_separator)
 
 
 
-    return 0
+    return False, None
 
 ################### TESTS #####################
 
@@ -187,9 +276,23 @@ vertices = ['a','b','c','d','e','f','g','h']
 edges = [('a','c'),('b','c'),('c','d'),('c','e'),('c','f'),('b','g'),('e','f'),('e','g'),('f','h'),('d','h'),('g','h')]
 g = Graph(vertices, edges)
 
-biconnectivity_algorithm = TarjansBiconnectivity(g)
-biconnected_components = biconnectivity_algorithm.find_biconnected_components()
-print(biconnected_components)
+is_condition_met, data = line_5_check(g)
+print("is_condition_met:",is_condition_met)
+print("data:",data)
+block, minimal_stable_separator = data
+new_graph = block.contract(minimal_stable_separator)
 
+cond, data = line_3_check(new_graph)
+if cond:
+    u, v, common_neighbors = data
+    new_graph = new_graph.contract(common_neighbors)
+    cond, data = line_3_check(new_graph)
+    if cond:
+        u, v, common_neighbors = data
+        new_graph = new_graph.contract(common_neighbors)
+
+        new_graph.show()
+
+# new_graph.show()
 
 
