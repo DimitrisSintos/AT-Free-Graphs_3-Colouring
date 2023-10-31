@@ -6,6 +6,8 @@ from biconnectivity import TarjansBiconnectivity
 
 
 class Graph:
+    show_count = 0 # Class-level variable to keep track of show calls
+
     def __init__(self, vertices, edges):
         self.vertices = vertices
         self.edges = edges
@@ -32,11 +34,13 @@ class Graph:
         :return: True if the neighborhood of s contains a triangle, otherwise False
         """
         neighbors = self.adjacency_list[contracted_vertex]
-        for edge in self.edges:
-            u, v = edge
-            #If both vertices of the edge are neighbors of s and the edge is not incident to s, then we have a triangle
-            if u != contracted_vertex and v != contracted_vertex and u in neighbors and v in neighbors:
-                return True
+        if len(neighbors) <= 3:
+            return False
+        else:
+            for sub_vertices in combinations(neighbors, 3):
+                if all((u, v) in self.edges or (v, u) in self.edges for u, v in combinations(sub_vertices, 2)):
+                    return True             
+
         return False
     
     def find_diamond(self):
@@ -84,10 +88,14 @@ class Graph:
     
 
     def show(self):
+        Graph.show_count += 1
+
         net = Network()
         net.add_nodes(self.vertices)
         net.add_edges(self.edges)
-        net.show("graph.html")
+        
+        file_name = f"graph-{Graph.show_count}.html"
+        net.show(file_name)
 
 
 class Block(Graph):
@@ -137,7 +145,7 @@ class Block(Graph):
             minimal_stable_separator = self.reduce_cutset_to_minimal_stable_separator(x, stable_cutset)
             return True, minimal_stable_separator
         else:
-            return False
+            return False, None
         
     
     def find_stable_cutset(self, starting_vertex, S):
@@ -174,7 +182,7 @@ class Block(Graph):
     def reduce_cutset_to_minimal_stable_separator(self, starting_vertex, S):
         separator = S.copy()
         for u in separator:
-            if len(S) >= 3:#TODO
+            if len(S) >= 3:
                 S_without_u = S - {u}
                 block_without_S_u = self.delete_vertices(S_without_u)
                 if not block_without_S_u.is_connected(starting_vertex):
@@ -204,9 +212,10 @@ class PolynomialTimeAlgorithm:
                 self.perform_contraction(vertices_to_contract)
                 return self.three_colouring()
 
-            line_5_condition, (block, minimal_stable_separator) = self.line_5_check()
-            print("line_5_ result:",  minimal_stable_separator,block)
+            line_5_condition,data = self.line_5_check()
+
             if line_5_condition:
+                block, minimal_stable_separator = data
                 print("Contracting based on line 5 check...")
                 self.perform_contraction(minimal_stable_separator,block)
                 return self.three_colouring()
@@ -237,8 +246,8 @@ class PolynomialTimeAlgorithm:
         if self.is_recursive_call:
             print("Line 1 check on recursion...", self.contracted_vertex)
             #TODO
-            # return self.graph.find_triangle_in_neighborhood(self.contracted_vertex)
-            return self.graph.find_K4()
+            return self.graph.find_triangle_in_neighborhood(self.contracted_vertex)
+            # return self.graph.find_K4()
         else:
             return self.graph.find_K4()
 
@@ -291,4 +300,11 @@ if __name__ == "__main__":
     algorithm = PolynomialTimeAlgorithm(g)
     algorithm.run()
 
+    # vertices_K4 = ['x','y','z','w','a']
+    # edges_K4 = [('x', 'y'), ('x', 'z'), ('x', 'w'), ('y', 'z'), ('y', 'w'), ('z', 'w'),('x','a')]
+    # G_K4 = Graph(vertices_K4, edges_K4)
+    # G_K4.show()
+    # result = G_K4.find_triangle_in_neighborhood('x')
+
+    # print("Has triangle:", result)
 
