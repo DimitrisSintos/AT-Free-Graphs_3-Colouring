@@ -1,5 +1,5 @@
 import unittest
-from at_free_coloring import Graph, is_K4, line_3_check
+from graph import Graph, is_K4, line_3_check
 
 class Test(unittest.TestCase):
     def setUp(self):
