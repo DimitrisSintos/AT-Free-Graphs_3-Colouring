@@ -53,36 +53,30 @@ class PolynomialTimeAlgorithm:
         biconnectivity_algorithm = TarjansBiconnectivity(self.graph)
         blocks = biconnectivity_algorithm.find_biconnected_components()
 
-        for i, block in enumerate(blocks):
-            print("\n!block vertices:",block.vertices)
-            print("!block edges:",block.edges)
-            self.graph.blocks[i] = block.copy()
-            print("type:", type(self.graph.blocks[i]))
-        print("blocks????:",self.graph.blocks)
+        # delete old blocks from graph and add the new blocks
+        self.graph.blocks = {}
 
-    
-        
+        for i, block in enumerate(blocks):
+            self.graph.blocks[i] = block
 
         for vertex in self.graph.vertices:
             for block_id in self.graph.blocks:
-                print("REAL BLOCK ID:",block_id)
+               
                 block = self.graph.blocks[block_id]
                 if vertex in block.vertices and len(block.vertices) >= 3:
-                    cond , minimal_stable_separator = block.find_minimal_stable_separator(vertex)#TODO
-                    print("minimal_stable_separator:",minimal_stable_separator)
+                    cond , minimal_stable_separator = block.find_minimal_stable_separator(vertex)
                     if cond:
                         return True, (block_id, minimal_stable_separator)
-
-
 
         return False, None
 
     def perform_contraction(self, vertices_to_contract,block_id=None,):
         old_graph = self.graph.copy()
         self.graph_snapshots.append(old_graph)
-        print("\nblock ID in perform_contraction!:",block_id)
-        if block_id:
-            self.graph = self.graph.blocks[block_id].contract(vertices_to_contract)
+        if block_id != None:
+            print("Type of block:",type(self.graph.blocks[block_id]))
+            self.graph.blocks[block_id] = self.graph.blocks[block_id].contract_block(vertices_to_contract)
+            self.graph.update_adjacency_list()
         else:
             self.graph = self.graph.contract(vertices_to_contract)
         self.contracted_vertex = "".join(vertices_to_contract)
@@ -91,6 +85,7 @@ class PolynomialTimeAlgorithm:
     
     def construct_three_colouring(self):
         print("constructing three colouring...")
+        self.graph.show()
         pass
     
     

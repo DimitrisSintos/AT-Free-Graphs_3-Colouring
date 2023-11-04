@@ -2,7 +2,7 @@ from itertools import combinations
 from graph import Graph
 
 class Block(Graph):
-    def __innit__(self,vertices, edges):
+    def __init__(self,vertices, edges):
         super().__init__(vertices, edges)    
     
     def find_minimal_stable_separator(self, x):
@@ -62,9 +62,9 @@ class Block(Graph):
         :param vertices_to_delete: set of vertices to delete
         :return: A new Block instance with the vertices deleted.
         """
-        new_veriteces = self.vertices - vertices_to_delete
+        new_vertices = self.vertices - vertices_to_delete
         new_edges = [e for e in self.edges if e[0] not in vertices_to_delete and e[1] not in vertices_to_delete]
-        return Block(new_veriteces,new_edges)
+        return Block(new_vertices,new_edges)
     
     def is_connected(self, start):
         if not self.vertices:
@@ -87,6 +87,30 @@ class Block(Graph):
             if neighbor not in visited:
                 self.dfs(neighbor, visited)
         return visited
+    
+    def contract_block(self, vertices_to_contract):
+
+        #All vertices to contract will be replaced by a new vertex
+        new_vertex = "".join(vertices_to_contract)
+        new_vertices = [v for v in self.vertices if v not in vertices_to_contract] + [new_vertex]
+
+        # All edges incident to a vertex in vertices_to_contract will now be incident to new_vertex
+        new_edges = []
+        for u, v in self.edges:
+            if u in vertices_to_contract and v in vertices_to_contract:
+                # Ignore edges within the contracted set
+                continue
+            elif u in vertices_to_contract:
+                new_edges.append((new_vertex, v))
+            elif v in vertices_to_contract:
+                new_edges.append((u, new_vertex))
+            else:
+                new_edges.append((u, v))
+        
+        return Block(new_vertices, new_edges)
+
+    def copy(self):
+        return Block(self.vertices.copy(), self.edges.copy())
         
     
     

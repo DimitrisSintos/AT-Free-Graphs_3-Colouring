@@ -69,9 +69,6 @@ class TarjansBiconnectivity:
             components_vertices.append([vertex])
             components_edges.append([])  # No edges in a single-vertex component
 
-        print("components_vertices:",components_vertices)
-        print("components_edges:",components_edges)
-
         return components_vertices, components_edges
 
         

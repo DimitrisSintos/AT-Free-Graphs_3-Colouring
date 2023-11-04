@@ -23,7 +23,7 @@ class Graph:
                 return True
         return False
 
-    def find_triangle_in_neighborhood(self, contracted_vertex):#TODO
+    def find_triangle_in_neighborhood(self, contracted_vertex):
         """
         Test if the neighborhood of contracted_vertex in graph contains a triangle. 
         This function is designed to be called when Line 1 is reached via recursion.
@@ -82,20 +82,45 @@ class Graph:
         
         return Graph(new_vertices, new_edges)
     
+    def update_adjacency_list(self):
+        new_vertices = []
+        new_edges = []
+        for block_id in self.blocks:
+            block = self.blocks[block_id]
+            new_vertices += block.vertices
+            new_edges += block.edges
+
+
+        print("new vertices:",new_vertices)
+        #delete adjacency list
+
+        self.vertices = new_vertices
+        self.edges = new_edges
+
+
+        self.adjacency_list = { vertex: set() for vertex in new_vertices}
+
+        for block in self.blocks.values():
+            print("block:",block)
+            for vertex in block.vertices:
+                self.adjacency_list[vertex] = block.adjacency_list[vertex]
+        print("updated adjacency list:",self.adjacency_list)
+
+        
+
+    
     def copy(self):
         return Graph(self.vertices.copy(), self.edges.copy())
     
 
     def show(self):
         Graph.show_count += 1
-
+        print("Showing graph:",Graph.show_count)
         net = Network()
-        print("\nblock before drawin", self.blocks)
 
         if self.blocks != {}:
             for block_id in self.blocks:
                 block = self.blocks[block_id]
-                print("\n\nblock edges before drawing:",block.edges)
                 net.add_nodes(block.vertices)
                 net.add_edges(block.edges)
         else:
