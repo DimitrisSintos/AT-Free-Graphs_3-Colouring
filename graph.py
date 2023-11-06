@@ -1,3 +1,4 @@
+from utilities import *
 from itertools import combinations
 from pyvis.network import Network
 
@@ -5,9 +6,11 @@ from pyvis.network import Network
 class Graph:
     show_count = 0 # Class-level variable to keep track of show calls
 
-    def __init__(self, vertices, edges):
-        self.vertices = vertices
-        self.edges = edges
+    def __init__(self, num_of_vertices, num_of_edges,edges,vertices = None):
+        self.num_of_vertices = num_of_vertices
+        self.num_of_edges = num_of_edges
+        self.vertices = [str(i) for i in range(num_of_vertices)] if vertices is None else vertices
+        self.edges = [(str(u),str(v)) for u,v in edges]       
         self.adjacency_list = { vertex: set() for vertex in self.vertices}
         for edge in self.edges:
             u, v = edge
@@ -64,7 +67,7 @@ class Graph:
         """
 
         #All vertices to contract will be replaced by a new vertex
-        new_vertex = "".join(vertices_to_contract)
+        new_vertex = rename_vertices_to_contract(vertices_to_contract)
         new_vertices = [v for v in self.vertices if v not in vertices_to_contract] + [new_vertex]
 
         # All edges incident to a vertex in vertices_to_contract will now be incident to new_vertex
@@ -79,8 +82,10 @@ class Graph:
                 new_edges.append((u, new_vertex))
             else:
                 new_edges.append((u, v))
-        
-        return Graph(new_vertices, new_edges)
+
+
+        #(self, num_of_vertices, num_of_edges,edges,vertices = None)
+        return Graph(len(new_vertices), len(new_edges), new_edges, new_vertices)
     
     def update_adjacency_list(self):
         new_vertices = []
@@ -91,9 +96,6 @@ class Graph:
             new_edges += block.edges
 
 
-        print("new vertices:",new_vertices)
-        #delete adjacency list
-
         self.vertices = new_vertices
         self.edges = new_edges
 
@@ -101,16 +103,14 @@ class Graph:
         self.adjacency_list = { vertex: set() for vertex in new_vertices}
 
         for block in self.blocks.values():
-            print("block:",block)
             for vertex in block.vertices:
                 self.adjacency_list[vertex] = block.adjacency_list[vertex]
-        print("updated adjacency list:",self.adjacency_list)
 
         
 
     
     def copy(self):
-        return Graph(self.vertices.copy(), self.edges.copy())
+        return Graph(self.num_of_vertices, self.num_of_edges, self.edges, self.vertices)
     
 
     def show(self):
@@ -121,10 +121,12 @@ class Graph:
         if self.blocks != {}:
             for block_id in self.blocks:
                 block = self.blocks[block_id]
-                net.add_nodes(block.vertices)
+                for node in block.vertices:
+                    net.add_node(node)
                 net.add_edges(block.edges)
         else:
-            net.add_nodes(self.vertices)
+            for node in self.vertices:
+                net.add_node(node)
             net.add_edges(self.edges)
         
         file_name = f"graph-{Graph.show_count}.html"

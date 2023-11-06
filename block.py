@@ -1,9 +1,13 @@
+from utilities import *
 from itertools import combinations
 from graph import Graph
 
 class Block(Graph):
-    def __init__(self,vertices, edges):
-        super().__init__(vertices, edges)    
+    def __init__(self, vertices, edges):
+        num_of_vertices = len(vertices)
+        num_of_edges = len(edges)
+        super().__init__(num_of_vertices, num_of_edges, edges, vertices)
+        
     
     def find_minimal_stable_separator(self, x):
         x_neighbors = self.adjacency_list[x]
@@ -91,7 +95,7 @@ class Block(Graph):
     def contract_block(self, vertices_to_contract):
 
         #All vertices to contract will be replaced by a new vertex
-        new_vertex = "".join(vertices_to_contract)
+        new_vertex = rename_vertices_to_contract(vertices_to_contract)
         new_vertices = [v for v in self.vertices if v not in vertices_to_contract] + [new_vertex]
 
         # All edges incident to a vertex in vertices_to_contract will now be incident to new_vertex

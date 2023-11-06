@@ -1,3 +1,4 @@
+from utilities import *
 from graph import Graph
 from tarjans_biconnectivity import TarjansBiconnectivity
 
@@ -79,7 +80,7 @@ class PolynomialTimeAlgorithm:
             self.graph.update_adjacency_list()
         else:
             self.graph = self.graph.contract(vertices_to_contract)
-        self.contracted_vertex = "".join(vertices_to_contract)
+        self.contracted_vertex = rename_vertices_to_contract(vertices_to_contract)
         self.is_recursive_call = True
         self.graph.show()
     

@@ -2,33 +2,48 @@ from graph import Graph
 from tarjans_biconnectivity import TarjansBiconnectivity
 from polynomial_time_algorithm import PolynomialTimeAlgorithm
 
-def main():
-    vertices = ['a','b','c','d','e','f','g','h']
-    edges = [('a','c'),('b','c'),('c','d'),('c','e'),('c','f'),('b','g'),('e','f'),('e','g'),('f','h'),('d','h'),('g','h')]
-    g = Graph(vertices, edges)
-    g.show()
-    algorithm = PolynomialTimeAlgorithm(g)
+from graph_parser import GraphParser
+
+
+import sys
+
+def main(argv):
+    file_path = None
+    num_of_edges = None
+    num_of_vertices = None
+    edges = None
+    AT_free_graph = None
+
+    if argv != []:
+        file_path = argv[0]
+    
+    if file_path is None:
+        num_of_vertices = 8
+        num_of_edges = 11
+        edges = [
+                (0,1),
+                (1,2),
+                (1,5),
+                (1,3),
+                (1,4),
+                (2,6),
+                (3,6),
+                (3,4),
+                (4,7),
+                (6,7),
+                (5,7)
+            ]
+        AT_free_graph = Graph(num_of_vertices, num_of_edges, edges)
+    else:
+        AT_free_graph = GraphParser.parse_graph_from_file(file_path)
+    
+
+
+
+    AT_free_graph.show()
+    algorithm = PolynomialTimeAlgorithm(AT_free_graph)
     algorithm.run()
-
-    # vertices_K4 = ['x','y','z','w','a']
-    # edges_K4 = [('x', 'y'), ('x', 'z'), ('x', 'w'), ('y', 'z'), ('y', 'w'), ('z', 'w'),('x','a')]
-    # G_K4 = Graph(vertices_K4, edges_K4)
-    # G_K4.show()
-    # result = G_K4.find_triangle_in_neighborhood('x')
-
-    # print("Has triangle:", result)
-
-    # vertices = ['a','b','c']
-    # edges = [('a','b'),('b','c'), ('a','c')]
-    # g = Graph(vertices, edges)
-    # # g.show()
-    # biconnectivity_algorithm = TarjansBiconnectivity(g)
-    # biconnected_components = biconnectivity_algorithm.find_biconnected_components()
-    # print("biconnected_components:",biconnected_components)
-
-
-
 
 
 if __name__ == "__main__":
-    main()
+    main(argv=sys.argv[1:])
