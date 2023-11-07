@@ -1,7 +1,7 @@
 from utilities import *
 from itertools import combinations
 from pyvis.network import Network
-
+#TODO: make Graph.edges be a set instead of a list to improve 
 
 class Graph:
     show_count = 0 # Class-level variable to keep track of show calls
@@ -18,8 +18,26 @@ class Graph:
             self.adjacency_list[v].add(u)
 
         self.blocks = {}
+        self.vertices_color = None
+
+    def is_triangle(self):
+        if self.num_of_vertices != 3 or self.num_of_edges != 3:
+            return False
+
+        # Check if all vertices are connected to exactly two other vertices
+        for vertex in self.adjacency_list:
+            if len(self.adjacency_list[vertex]) != 2:
+                return False
+
+        return True
 
     def find_K4(self):
+        """
+        The function "find_K4" checks if a graph contains a complete subgraph with 4 vertices.
+        This function should run in time O(m^2)=O(n^2*m)
+        :return: a boolean value. It returns True if there exists a subset of 4 vertices in the graph
+        where all pairs of vertices are connected by an edge. It returns False otherwise.
+        """
 
         for sub_vertices in combinations(self.vertices, 4):  # all possible 4-vertex combinations
             if all((u, v) in self.edges or (v, u) in self.edges for u, v in combinations(sub_vertices, 2)):  # all pairs in subset are connected
@@ -30,6 +48,7 @@ class Graph:
         """
         Test if the neighborhood of contracted_vertex in graph contains a triangle. 
         This function is designed to be called when Line 1 is reached via recursion.
+        This function should run in time O(n*m)
 
         :param graph: The graph instance
         :param contracted_vertex: The contracted vertex in the graph
@@ -46,6 +65,14 @@ class Graph:
         return False
     
     def find_diamond(self):
+        """
+        This function should run in time O(n*m)
+        The function "find_diamond" searches for a diamond pattern in a graph by finding two nodes that
+        have at least two common neighbors.
+        :return: a set of common neighbors between two vertices in a graph. If there are at least two
+        common neighbors, the function returns the set of common neighbors. If there are no common
+        neighbors or less than two common neighbors, the function returns None.
+        """
         for edge in self.edges:
             u, v = edge
             adj_u = self.adjacency_list[u]
@@ -113,23 +140,33 @@ class Graph:
         return Graph(self.num_of_vertices, self.num_of_edges, self.edges, self.vertices)
     
 
-    def show(self):
+    def show(self,graph_name='graph'):
         Graph.show_count += 1
         print("Showing graph:",Graph.show_count)
-        net = Network()
+        net = Network(height="500px", width="100%", bgcolor="#222222", font_color="white")
 
-        if self.blocks != {}:
-            for block_id in self.blocks:
-                block = self.blocks[block_id]
-                for node in block.vertices:
-                    net.add_node(node)
-                net.add_edges(block.edges)
-        else:
-            for node in self.vertices:
-                net.add_node(node)
+        if self.vertices_color is not None:
+            for vertex in self.vertices:
+                net.add_node(vertex, color=self.vertices_color[vertex])
             net.add_edges(self.edges)
         
-        file_name = f"graph-{Graph.show_count}.html"
+
+        else:
+
+            if self.blocks != {}:
+                for block_id in self.blocks:
+                    block = self.blocks[block_id]
+                    for node in block.vertices:
+                        net.add_node(node)
+                    net.add_edges(block.edges)
+            else:
+                for node in self.vertices:
+                    net.add_node(node)
+                net.add_edges(self.edges)
+
+        
+        
+        file_name = f"output-graphs/{graph_name}-{Graph.show_count}.html"
         net.show(file_name)
 
 

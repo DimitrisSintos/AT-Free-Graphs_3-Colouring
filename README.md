@@ -1,7 +1,5 @@
 # AT-Free Graphs 3-Colouring
 
-
-
 ## Installation
 
 1. Install `python3.10-venv` using `apt`:
@@ -34,5 +32,3 @@ Run the program using Python 3. You can optionally provide an input graph file (
 
 ```bash
 python3 main.py <optional-input-graph.json>
-
-

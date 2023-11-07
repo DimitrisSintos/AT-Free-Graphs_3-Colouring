@@ -50,6 +50,11 @@ class PolynomialTimeAlgorithm:
 
 
     def line_5_check(self):
+        """
+        this should run in O(n*m) time
+        if G contains a minimal stable separator S with |S| ≥ 2 then
+            Recursively find a 3-colouring of G/S
+        """
         # Find the biconnected components of the graph
         biconnectivity_algorithm = TarjansBiconnectivity(self.graph)
         blocks = biconnectivity_algorithm.find_biconnected_components()
@@ -57,8 +62,10 @@ class PolynomialTimeAlgorithm:
         # delete old blocks from graph and add the new blocks
         self.graph.blocks = {}
 
-        for i, block in enumerate(blocks):
+        for i, block in enumerate(blocks):# i represents the block id
             self.graph.blocks[i] = block
+
+        self.graph.show("after-biconnectivity")
 
         for vertex in self.graph.vertices:
             for block_id in self.graph.blocks:
@@ -82,12 +89,30 @@ class PolynomialTimeAlgorithm:
             self.graph = self.graph.contract(vertices_to_contract)
         self.contracted_vertex = rename_vertices_to_contract(vertices_to_contract)
         self.is_recursive_call = True
-        self.graph.show()
+        self.graph.show("contracted-graph")
     
     def construct_three_colouring(self):
         print("constructing three colouring...")
         self.graph.show()
-        pass
+        if self.graph.blocks == {}:
+            print("Graph has no blocks.")
+            return
+        else:
+            initial_graph = self.graph_snapshots[0]
+            initial_graph.vertices_color = { vertex : None for vertex in initial_graph.vertices}
+            for block in self.graph.blocks.values():
+                print("block vertices:",block.vertices)
+                if block.num_of_vertices >=3:
+                    #TODO: Check if it is a triangular strip
+                    if block.is_triangle:
+                        for vertex in block.vertices:
+                            expanded_vertices = expand_contracted_vertices(vertex)
+                            color = alternate_color()
+                            for v in expanded_vertices:
+                                initial_graph.vertices_color[v] = color
+            
+            initial_graph.show()
+            
     
     
     

@@ -21,10 +21,17 @@ class Block(Graph):
     
     def find_stable_cutset(self, starting_vertex, S):
         unique_edge  = None
-        #find if a unique edge exists in S
+
+        edge_found = False  
         for u, v in combinations(S, 2):
             if (u, v) in self.edges or (v, u) in self.edges:
-                unique_edge = (u, v)
+                if not edge_found:  # Check if no edge was found previously
+                    unique_edge = (u, v)
+                    edge_found = True  # Set the flag to indicate an edge has been found
+                else:
+                    unique_edge = None  # More than one edge found, so it's not unique
+                    break  # Exit the loop as we are only interested in unique edge
+                
         if unique_edge is None:
             #check if S is stable cutset of block
             block_without_S = self.delete_vertices(S)

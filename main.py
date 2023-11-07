@@ -9,8 +9,8 @@ import sys
 
 def main(argv):
     file_path = None
-    num_of_edges = None
     num_of_vertices = None
+    num_of_edges = None
     edges = None
     AT_free_graph = None
 
