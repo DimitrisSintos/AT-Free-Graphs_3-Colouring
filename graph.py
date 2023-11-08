@@ -9,8 +9,8 @@ class Graph:
     def __init__(self, num_of_vertices, num_of_edges,edges,vertices = None):
         self.num_of_vertices = num_of_vertices
         self.num_of_edges = num_of_edges
-        self.vertices = [str(i) for i in range(num_of_vertices)] if vertices is None else vertices
-        self.edges = [(str(u),str(v)) for u,v in edges]       
+        self.vertices = set(str(i) for i in range(num_of_vertices)) if vertices is None else vertices
+        self.edges = set((str(u),str(v)) for u,v in edges)       
         self.adjacency_list = { vertex: set() for vertex in self.vertices}
         for edge in self.edges:
             u, v = edge
@@ -39,10 +39,21 @@ class Graph:
         where all pairs of vertices are connected by an edge. It returns False otherwise.
         """
 
-        for sub_vertices in combinations(self.vertices, 4):  # all possible 4-vertex combinations
-            if all((u, v) in self.edges or (v, u) in self.edges for u, v in combinations(sub_vertices, 2)):  # all pairs in subset are connected
-                return True
+        for edge in self.edges:
+            print("edge:",edge)
+            u, v = edge
+            disjoint_edges = set( (x,y) for (x,y) in self.edges if x not in (u,v) and y not in (u,v))
+            for across_edge in disjoint_edges:
+                x, y = across_edge
+                edges_found = 0 
+                if ( ( (x,u) in self.edges or (u,x) in self.edges )
+                     and ( (y,v) in self.edges or (v,y) in self.edges ) 
+                       and ( (x,v) in self.edges or (v,x) in self.edges ) 
+                        and ( (y,u) in self.edges or (u,y) in self.edges ) ):
+                    return True
         return False
+                
+
 
     def find_triangle_in_neighborhood(self, contracted_vertex):
         """
@@ -59,8 +70,9 @@ class Graph:
             return False
         else:
             for sub_vertices in combinations(neighbors, 3):
+                print("sub_vertices:",sub_vertices)
                 if all((u, v) in self.edges or (v, u) in self.edges for u, v in combinations(sub_vertices, 2)):
-                    return True             
+                    return True 
 
         return False
     
@@ -145,26 +157,12 @@ class Graph:
         print("Showing graph:",Graph.show_count)
         net = Network(height="500px", width="100%", bgcolor="#222222", font_color="white")
 
-        if self.vertices_color is not None:
-            for vertex in self.vertices:
-                net.add_node(vertex, color=self.vertices_color[vertex])
-            net.add_edges(self.edges)
-        
+        for vertex in self.vertices:
+            # If vertex colors are provided, use them; otherwise, default to None
+            color = self.vertices_color.get(vertex) if isinstance(self.vertices_color, dict) else None
+            net.add_node(vertex, color=color)
 
-        else:
-
-            if self.blocks != {}:
-                for block_id in self.blocks:
-                    block = self.blocks[block_id]
-                    for node in block.vertices:
-                        net.add_node(node)
-                    net.add_edges(block.edges)
-            else:
-                for node in self.vertices:
-                    net.add_node(node)
-                net.add_edges(self.edges)
-
-        
+        net.add_edges(self.edges)        
         
         file_name = f"output-graphs/{graph_name}-{Graph.show_count}.html"
         net.show(file_name)

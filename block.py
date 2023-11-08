@@ -31,7 +31,7 @@ class Block(Graph):
                 else:
                     unique_edge = None  # More than one edge found, so it's not unique
                     break  # Exit the loop as we are only interested in unique edge
-                
+
         if unique_edge is None:
             #check if S is stable cutset of block
             block_without_S = self.delete_vertices(S)
@@ -42,12 +42,12 @@ class Block(Graph):
         else:
             u, v = unique_edge
             S_without_u = S - {u}
-            S_without_v = S - {v}
             block_without_S_u = self.delete_vertices(S_without_u)
 
             if not block_without_S_u.is_connected(starting_vertex):
                 return True, S_without_u
             
+            S_without_v = S - {v}
             block_without_S_v = self.delete_vertices(S_without_v)
             if not block_without_S_v.is_connected(starting_vertex):
                 return True, S_without_v
@@ -73,8 +73,9 @@ class Block(Graph):
         :param vertices_to_delete: set of vertices to delete
         :return: A new Block instance with the vertices deleted.
         """
-        new_vertices = self.vertices - vertices_to_delete
-        new_edges = [e for e in self.edges if e[0] not in vertices_to_delete and e[1] not in vertices_to_delete]
+        new_vertices = set(self.vertices - vertices_to_delete)
+        new_edges = set(e for e in self.edges if e[0] not in vertices_to_delete and e[1] not in vertices_to_delete)#TODO
+
         return Block(new_vertices,new_edges)
     
     def is_connected(self, start):
@@ -99,26 +100,6 @@ class Block(Graph):
                 self.dfs(neighbor, visited)
         return visited
     
-    def contract_block(self, vertices_to_contract):
-
-        #All vertices to contract will be replaced by a new vertex
-        new_vertex = rename_vertices_to_contract(vertices_to_contract)
-        new_vertices = [v for v in self.vertices if v not in vertices_to_contract] + [new_vertex]
-
-        # All edges incident to a vertex in vertices_to_contract will now be incident to new_vertex
-        new_edges = []
-        for u, v in self.edges:
-            if u in vertices_to_contract and v in vertices_to_contract:
-                # Ignore edges within the contracted set
-                continue
-            elif u in vertices_to_contract:
-                new_edges.append((new_vertex, v))
-            elif v in vertices_to_contract:
-                new_edges.append((u, new_vertex))
-            else:
-                new_edges.append((u, v))
-        
-        return Block(new_vertices, new_edges)
 
     def copy(self):
         return Block(self.vertices.copy(), self.edges.copy())

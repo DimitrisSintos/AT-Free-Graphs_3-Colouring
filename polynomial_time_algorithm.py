@@ -10,6 +10,7 @@ class PolynomialTimeAlgorithm:
         self.contracted_vertex = None
 
     def three_colouring(self):
+        self.graph_snapshots.append(self.graph.copy())
         try:
             line_1_result = self.line_1_check()
             if line_1_result:
@@ -22,11 +23,10 @@ class PolynomialTimeAlgorithm:
                 self.perform_contraction(vertices_to_contract)
                 return self.three_colouring()
 
-            line_5_condition,data = self.line_5_check()
+            line_5_condition,minimal_stable_separator = self.line_5_check()
 
             if line_5_condition:
-                block_id, minimal_stable_separator = data
-                self.perform_contraction(minimal_stable_separator,block_id)
+                self.perform_contraction(minimal_stable_separator)
                 return self.three_colouring()
 
             return self.construct_three_colouring()
@@ -65,7 +65,6 @@ class PolynomialTimeAlgorithm:
         for i, block in enumerate(blocks):# i represents the block id
             self.graph.blocks[i] = block
 
-        self.graph.show("after-biconnectivity")
 
         for vertex in self.graph.vertices:
             for block_id in self.graph.blocks:
@@ -74,19 +73,14 @@ class PolynomialTimeAlgorithm:
                 if vertex in block.vertices and len(block.vertices) >= 3:
                     cond , minimal_stable_separator = block.find_minimal_stable_separator(vertex)
                     if cond:
-                        return True, (block_id, minimal_stable_separator)
+                        return True,  minimal_stable_separator
 
         return False, None
 
-    def perform_contraction(self, vertices_to_contract,block_id=None,):
+    def perform_contraction(self, vertices_to_contract):
         old_graph = self.graph.copy()
         self.graph_snapshots.append(old_graph)
-        if block_id != None:
-            print("Type of block:",type(self.graph.blocks[block_id]))
-            self.graph.blocks[block_id] = self.graph.blocks[block_id].contract_block(vertices_to_contract)
-            self.graph.update_adjacency_list()
-        else:
-            self.graph = self.graph.contract(vertices_to_contract)
+        self.graph = self.graph.contract(vertices_to_contract)
         self.contracted_vertex = rename_vertices_to_contract(vertices_to_contract)
         self.is_recursive_call = True
         self.graph.show("contracted-graph")
