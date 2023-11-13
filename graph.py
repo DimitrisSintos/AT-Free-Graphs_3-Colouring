@@ -31,6 +31,9 @@ class Graph:
 
         return True
 
+    def is_triangular_strip(self):
+        return False #TODO: implement this function
+
     def find_K4(self):
         """
         The function "find_K4" checks if a graph contains a complete subgraph with 4 vertices.

@@ -88,26 +88,39 @@ class PolynomialTimeAlgorithm:
     def construct_three_colouring(self):
         print("constructing three colouring...")
         self.graph.show()
-        if self.graph.blocks == {}:
-            print("Graph has no blocks.")
-            return
+        self.graph.vertices_color = {vertex: None for vertex in self.graph.vertices}
+        # check if graph is a triangular strip
+        if self.graph.is_triangular_strip():
+            print("graph is a triangular strip")
+            # if so, colour the graph
+            # colour_triangular_strip()
+        # if not check for all blocks if they are triangular strips
         else:
-            initial_graph = self.graph_snapshots[0]
-            initial_graph.vertices_color = { vertex : None for vertex in initial_graph.vertices}
-            for block in self.graph.blocks.values():
-                print("block vertices:",block.vertices)
-                if block.num_of_vertices >=3:
-                    #TODO: Check if it is a triangular strip
-                    if block.is_triangle:
-                        for vertex in block.vertices:
-                            expanded_vertices = expand_contracted_vertices(vertex)
-                            color = alternate_color()
-                            for v in expanded_vertices:
-                                initial_graph.vertices_color[v] = color
+            for block_id in self.graph.blocks:
+                self.colour_block(block_id)
+
+        self.graph.show("three-colouring")
+
             
-            initial_graph.show()
+    def colour_block(self,block_id):
+        if self.graph.blocks[block_id].num_of_vertices < 3:
+            return
+        if self.graph.blocks[block_id].is_triangle():
+            triangle_vertices = self.graph.blocks[block_id].vertices
+            posible_colors = self.check_for_possible_colors(triangle_vertices)
+            for vertex in triangle_vertices:
+                if self.graph.vertices_color[vertex] is None:
+                    self.graph.vertices_color[vertex] = posible_colors.pop()
+            return
             
-    
+            
+    def check_for_possible_colors(self,vertices):
+        possible_colors = ['red','green','blue']
+        for vertex in vertices:
+            if self.graph.vertices_color[vertex] is not None:
+                possible_colors.remove(self.graph.vertices_color[vertex])
+
+        return possible_colors
     
     
     def run(self):
