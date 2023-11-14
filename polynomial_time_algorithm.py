@@ -57,7 +57,9 @@ class PolynomialTimeAlgorithm:
         """
         # Find the biconnected components of the graph
         biconnectivity_algorithm = TarjansBiconnectivity(self.graph)
-        blocks = biconnectivity_algorithm.find_biconnected_components()
+        blocks, self.graph.cutpoints = biconnectivity_algorithm.find_biconnected_components()
+
+        print("cutpoints:",self.graph.cutpoints)
 
         # delete old blocks from graph and add the new blocks
         self.graph.blocks = {}
@@ -87,40 +89,70 @@ class PolynomialTimeAlgorithm:
     
     def construct_three_colouring(self):
         print("constructing three colouring...")
-        self.graph.show()
         self.graph.vertices_color = {vertex: None for vertex in self.graph.vertices}
-        # check if graph is a triangular strip
-        if self.graph.is_triangular_strip():
-            print("graph is a triangular strip")
-            # if so, colour the graph
-            # colour_triangular_strip()
-        # if not check for all blocks if they are triangular strips
+
+        if self.graph.blocks == {}:
+            #Then the graph is a triangle or a triangular strip
+            if self.graph.is_triangle():
+                self.colour_triangle(self.graph)
+            else:
+                print("colouring triangular strip")
         else:
+            #colour blocks
             for block_id in self.graph.blocks:
-                self.colour_block(block_id)
-
-        self.graph.show("three-colouring")
+                block = self.graph.blocks[block_id]
+                if block.num_of_vertices < 3:
+                    pass # we will colour this block later
+                elif block.num_of_vertices == 3:
+                    self.colour_triangle(block)
+                else: # block is a triangular strip
+                    print("colouring triangular strip in block")
 
             
-    def colour_block(self,block_id):
-        if self.graph.blocks[block_id].num_of_vertices < 3:
-            return
-        if self.graph.blocks[block_id].is_triangle():
-            triangle_vertices = self.graph.blocks[block_id].vertices
-            posible_colors = self.check_for_possible_colors(triangle_vertices)
-            for vertex in triangle_vertices:
-                if self.graph.vertices_color[vertex] is None:
-                    self.graph.vertices_color[vertex] = posible_colors.pop()
-            return
             
-            
-    def check_for_possible_colors(self,vertices):
-        possible_colors = ['red','green','blue']
-        for vertex in vertices:
-            if self.graph.vertices_color[vertex] is not None:
-                possible_colors.remove(self.graph.vertices_color[vertex])
 
-        return possible_colors
+
+        self.colour_remaining_vertices()
+
+        self.graph.show("three colouring before expansion") 
+       
+
+        initial_graph = self.colour_initial_graph()
+
+        initial_graph.show("three-colouring")
+
+    def colour_triangle(self,triangle):
+        triangle_vertices = triangle.vertices
+
+        available_colors = {'red', 'green', 'blue'}
+
+        for vertex in triangle_vertices:
+            self.graph.vertices_color[vertex] = available_colors.pop()
+
+    def colour_remaining_vertices(self):
+        none_coloured_vertices = [vertex for vertex in self.graph.vertices if self.graph.vertices_color[vertex] is None]
+        for vertex in none_coloured_vertices:
+            available_colors = {'red', 'green', 'blue'}
+            for neighbour in self.graph.adjacency_list[vertex]:
+                if self.graph.vertices_color[neighbour] in available_colors:
+                    available_colors.remove(self.graph.vertices_color[neighbour])
+            self.graph.vertices_color[vertex] = available_colors.pop()
+
+
+
+
+    def colour_initial_graph(self):
+        initial_graph = self.graph_snapshots[0]
+        
+        initial_graph.vertices_color = {vertex: None for vertex in initial_graph.vertices}
+
+        for vertex in self.graph.vertices:
+            expanded_vertices = expand_contracted_vertices(vertex)
+            for expanded_vertex in expanded_vertices:
+                initial_graph.vertices_color[expanded_vertex] = self.graph.vertices_color[vertex]
+
+        return initial_graph
+
     
     
     def run(self):

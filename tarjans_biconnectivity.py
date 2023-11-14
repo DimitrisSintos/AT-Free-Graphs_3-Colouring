@@ -11,6 +11,7 @@ class TarjansBiconnectivity:
         self.lowpt = {}
         self.edge_stack = []
         self.biconnected_components = [] 
+        self.cutpoints = set()
 
     def find_biconnected_components(self):
         for vertex in self.graph.vertices:
@@ -21,11 +22,12 @@ class TarjansBiconnectivity:
         print("components_vertices",components_vertices)
         print("components_edges",components_edges)
         blocks = self.create_blocks_from_components(components_vertices, components_edges)
-        return blocks
+        return blocks, self.cutpoints
 
     def biconnect(self,v,parent):
         self.time += 1
         self.number[v] = self.lowpt[v] = self.time
+    
 
         for w in self.graph.adjacency_list[v]:
             if w not in self.number:
@@ -40,8 +42,13 @@ class TarjansBiconnectivity:
                         component.append(e)
                         if e[0] == v and e[1] == w:
                             break
+                    
+                    
                     self.biconnected_components.append(component)
-            
+
+                    if parent is not None and len(component) > 1:
+                        self.cutpoints.add(v)
+
             elif self.number[w] < self.number[v] and w != parent:
                 self.edge_stack.append((v,w))
                 self.lowpt[v] = min(self.lowpt[v],self.number[w])

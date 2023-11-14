@@ -18,21 +18,15 @@ class Graph:
             self.adjacency_list[v].add(u)
 
         self.blocks = {}
+        self.cutpoints = set()
         self.vertices_color = None
 
+
     def is_triangle(self):
-        if self.num_of_vertices != 3 or self.num_of_edges != 3:
+        if self.num_of_vertices == 3 or self.num_of_edges == 3:
+            return True
+        else:
             return False
-
-        # Check if all vertices are connected to exactly two other vertices
-        for vertex in self.adjacency_list:
-            if len(self.adjacency_list[vertex]) != 2:
-                return False
-
-        return True
-
-    def is_triangular_strip(self):
-        return False #TODO: implement this function
 
     def find_K4(self):
         """
@@ -165,8 +159,11 @@ class Graph:
             color = self.vertices_color.get(vertex) if isinstance(self.vertices_color, dict) else None
             net.add_node(vertex, color=color)
 
-        net.add_edges(self.edges)        
-        
+
+        for edge in self.edges:
+            u, v = edge
+            net.add_edge(u, v, color="white")
+
         file_name = f"output-graphs/{graph_name}-{Graph.show_count}.html"
         net.show(file_name)
 

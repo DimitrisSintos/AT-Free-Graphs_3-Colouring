@@ -1,5 +1,5 @@
 *.venv
 *__pycache__*
-*output-graphs*
+output-graphs/*
 *.vscode
 input-graphs
