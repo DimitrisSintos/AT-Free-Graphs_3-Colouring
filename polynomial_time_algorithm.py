@@ -1,6 +1,7 @@
 from utilities import *
 from graph import Graph
 from tarjans_biconnectivity import TarjansBiconnectivity
+from itertools import combinations
 
 class PolynomialTimeAlgorithm:
     def __init__(self,graph):
@@ -8,6 +9,8 @@ class PolynomialTimeAlgorithm:
         self.is_recursive_call = False
         self.graph_snapshots = []
         self.contracted_vertex = None
+
+        self.previous_triangle = None
 
     def three_colouring(self):
         self.graph_snapshots.append(self.graph.copy())
@@ -91,12 +94,13 @@ class PolynomialTimeAlgorithm:
         print("constructing three colouring...")
         self.graph.vertices_color = {vertex: None for vertex in self.graph.vertices}
 
-        if self.graph.blocks == {}:
+        if len(self.graph.blocks) == 1:
             #Then the graph is a triangle or a triangular strip
             if self.graph.is_triangle():
-                self.colour_triangle(self.graph)
-            else:
-                print("colouring triangular strip")
+                self.colour_triangle(self.graph.vertices)
+            else:#graph is a triangular strip
+                triangular_strip = self.graph.copy()
+                self.colour_trianglular_strip(triangular_strip)
         else:
             #colour blocks
             for block_id in self.graph.blocks:
@@ -104,9 +108,10 @@ class PolynomialTimeAlgorithm:
                 if block.num_of_vertices < 3:
                     pass # we will colour this block later
                 elif block.num_of_vertices == 3:
-                    self.colour_triangle(block)
+                    self.colour_triangle(block.vertices)
                 else: # block is a triangular strip
-                    print("colouring triangular strip in block")
+                    triangular_strip = block.copy()
+                    self.colour_trianglular_strip(triangular_strip)
 
             
             
@@ -121,16 +126,107 @@ class PolynomialTimeAlgorithm:
 
         initial_graph.show("three-colouring")
 
-    def colour_triangle(self,triangle):
-        triangle_vertices = triangle.vertices
+    def colour_triangle(self,triangle_vertices):
 
         available_colors = {'red', 'green', 'blue'}
 
         for vertex in triangle_vertices:
             self.graph.vertices_color[vertex] = available_colors.pop()
 
+    def colour_trianglular_strip(self,triangular_strip, next_vertex=None):
+        if triangular_strip.num_of_vertices == 6:
+            #then the triangular strip is a prism
+            print("next vertex:",next_vertex)
+            self.colour_prism(triangular_strip, next_vertex)
+            return
+        
+        if next_vertex is None:
+            first_triangle,next_vertex = self.find_init_triangle_in_strip(triangular_strip)
+            self.colour_triangle(first_triangle)
+            self.previous_triangle = first_triangle
+            triangular_strip = triangular_strip.delete_vertices(first_triangle)
+            self.colour_trianglular_strip(triangular_strip, next_vertex)
+        else:
+            triangle,next_vertex = self.find_triangle_in_strip(next_vertex,triangular_strip)
+            self.colour_triangle_of_trianglular_strip(triangle)
+            self.previous_triangle = triangle
+            triangular_strip = triangular_strip.delete_vertices(triangle)
+            self.colour_trianglular_strip(triangular_strip, next_vertex)
+            
+        
+
+    def find_triangle_in_strip(self,vertex,triangular_strip):
+        triangle = {vertex}
+        next_vertex = None
+        for neighbour in triangular_strip.adjacency_list[vertex]:
+            if len(triangular_strip.adjacency_list[neighbour]) == 3:
+                triangle.add(neighbour)
+            
+            else:
+                next_vertex = neighbour
+
+        return triangle, next_vertex
+
+    def find_init_triangle_in_strip(self,triangular_strip):
+        for vertex in triangular_strip.vertices:
+            if len(triangular_strip.adjacency_list[vertex]) == 3:
+                triangle,next_vertex = self.find_triangle_in_strip(vertex,triangular_strip)
+                return triangle,next_vertex
+            
+    def colour_triangle_of_trianglular_strip(self,triangle):
+        for vertex in triangle:
+            for previous_vertex in self.previous_triangle:
+                if previous_vertex in self.graph.adjacency_list[vertex]:
+                    previous_vertex_color = self.graph.vertices_color[previous_vertex]
+                    self.graph.vertices_color[vertex] = get_next_colour(previous_vertex_color)
+                    break
+
+    def colour_prism(self,prism,next_vertex):
+        first_triangle, second_triangle = self.find_triangles_in_prism(prism)
+        print('first triangle:', first_triangle)
+        print('second triangle:', second_triangle)
+
+        print("previous triangle:",self.previous_triangle)
+
+        if next_vertex is None:
+            self.colour_triangle(first_triangle)
+            self.previous_triangle = first_triangle
+            self.colour_triangle_of_trianglular_strip(second_triangle)
+
+        else:
+            if next_vertex in first_triangle:
+                self.colour_triangle_of_trianglular_strip(first_triangle)
+                self.previous_triangle = first_triangle
+                self.colour_triangle_of_trianglular_strip(second_triangle)
+            else:
+                self.colour_triangle_of_trianglular_strip(second_triangle)
+                self.previous_triangle = second_triangle
+                self.colour_triangle_of_trianglular_strip(first_triangle)
+            
+
+    def find_triangles_in_prism(self,prism):
+        first_triangle = set()
+        second_triangle = set()
+        prism_vertices = prism.vertices
+        for vertices in combinations(prism_vertices,3):
+           if self.graph.edge_exists(vertices[0],vertices[1]) and\
+                self.graph.edge_exists(vertices[1],vertices[2]) and \
+                    self.graph.edge_exists(vertices[2],vertices[0]):
+               first_triangle = set(vertices)
+               break
+
+
+        second_triangle = prism_vertices - first_triangle
+
+        return first_triangle, second_triangle
+
+
+
+
+
     def colour_remaining_vertices(self):
         none_coloured_vertices = [vertex for vertex in self.graph.vertices if self.graph.vertices_color[vertex] is None]
+        print("none coloured vertices:",none_coloured_vertices)
         for vertex in none_coloured_vertices:
             available_colors = {'red', 'green', 'blue'}
             for neighbour in self.graph.adjacency_list[vertex]:

@@ -39,26 +39,28 @@ class GraphParser:
 
         # Check for each combination
         for v1, v2, v3 in vertex_combinations:
-            if has_path_avoiding_neighbors(G, v1, v2, v3) and has_path_avoiding_neighbors(G, v2, v3, v1) and has_path_avoiding_neighbors(G, v3, v1, v2):
+            if GraphParser.has_path_avoiding_neighbors(G, v1, v2, v3) and GraphParser.has_path_avoiding_neighbors(G, v2, v3, v1) and GraphParser.has_path_avoiding_neighbors(G, v3, v1, v2):
+                print("Found an asteroidal triple: ", v1, v2, v3)
                 return True
         return False
+    
+    @staticmethod
+    def has_path_avoiding_neighbors(G, source, target, avoid):
+        """
+        Check if there is a path from source to target in graph G
+        avoiding neighbors of avoid.
+        """
+        neighbors_to_avoid = set(G.neighbors(avoid))
+        visited = set()
+        queue = [source]
 
-def has_path_avoiding_neighbors(G, source, target, avoid):
-    """
-    Check if there is a path from source to target in graph G
-    avoiding neighbors of avoid.
-    """
-    neighbors_to_avoid = set(G.neighbors(avoid))
-    visited = set()
-    queue = [source]
+        while queue:
+            node = queue.pop(0)
+            visited.add(node)
+            if node == target:
+                return True
+            for neighbor in G.neighbors(node):
+                if neighbor != avoid and neighbor not in visited and neighbor not in queue and neighbor not in neighbors_to_avoid:
+                    queue.append(neighbor)
 
-    while queue:
-        node = queue.pop(0)
-        visited.add(node)
-        if node == target:
-            return True
-        for neighbor in G.neighbors(node):
-            if neighbor != avoid and neighbor not in visited and neighbor not in queue and neighbor not in neighbors_to_avoid:
-                queue.append(neighbor)
-
-    return False
+        return False

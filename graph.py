@@ -1,7 +1,7 @@
 from utilities import *
 from itertools import combinations
 from pyvis.network import Network
-#TODO: make Graph.edges be a set instead of a list to improve 
+
 
 class Graph:
     show_count = 0 # Class-level variable to keep track of show calls
@@ -30,12 +30,10 @@ class Graph:
 
     def find_K4(self):
         """
-        The function "find_K4" checks if a graph contains a complete subgraph with 4 vertices.
-        This function should run in time O(m^2)=O(n^2*m)
-        :return: a boolean value. It returns True if there exists a subset of 4 vertices in the graph
-        where all pairs of vertices are connected by an edge. It returns False otherwise.
+        The function `find_K4` checks if a graph contains a complete graph K4.
+        :return: a boolean value. It returns True if a K4 subgraph is found in the given graph, and False
+        otherwise.
         """
-
         for edge in self.edges:
             print("edge:",edge)
             u, v = edge
@@ -63,7 +61,7 @@ class Graph:
         :return: True if the neighborhood of s contains a triangle, otherwise False
         """
         neighbors = self.adjacency_list[contracted_vertex]
-        if len(neighbors) <= 3:
+        if len(neighbors) < 3:
             return False
         else:
             for sub_vertices in combinations(neighbors, 3):
@@ -123,24 +121,23 @@ class Graph:
         #(self, num_of_vertices, num_of_edges,edges,vertices = None)
         return Graph(len(new_vertices), len(new_edges), new_edges, new_vertices)
     
-    def update_adjacency_list(self):
-        new_vertices = []
-        new_edges = []
-        for block_id in self.blocks:
-            block = self.blocks[block_id]
-            new_vertices += block.vertices
-            new_edges += block.edges
+    
+    def delete_vertices(self, vertices_to_delete):
+        """
+        Delete a set of vertices from the graph.
+        
+        :param vertices_to_delete: set of vertices to delete
+        :return: A new Graph instance with the vertices deleted.
+        """
+        new_vertices = set(self.vertices - vertices_to_delete)
+        print('new_vertices:',new_vertices)
+        new_edges = set(e for e in self.edges if e[0] not in vertices_to_delete and e[1] not in vertices_to_delete)#TODO
+        print("new_edges:",new_edges)
+        return Graph(len(new_vertices), len(new_edges), new_edges, new_vertices)
 
-
-        self.vertices = new_vertices
-        self.edges = new_edges
-
-
-        self.adjacency_list = { vertex: set() for vertex in new_vertices}
-
-        for block in self.blocks.values():
-            for vertex in block.vertices:
-                self.adjacency_list[vertex] = block.adjacency_list[vertex]
+    
+    def edge_exists(self, u, v):
+        return (u, v) in self.edges or (v, u) in self.edges
 
         
 
