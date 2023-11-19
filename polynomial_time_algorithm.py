@@ -115,9 +115,10 @@ class PolynomialTimeAlgorithm:
 
             
             
+            #colour cutpoints correctly
+            # self.colour_cutpoints()
 
-
-        self.colour_remaining_vertices()
+            self.colour_remaining_vertices()
 
         self.graph.show("three colouring before expansion") 
        
@@ -222,7 +223,18 @@ class PolynomialTimeAlgorithm:
 
 
 
-
+    def colour_cutpoints(self):
+        for cutpoint in self.graph.cutpoints:
+            #check if a neighbour of cutpoint has the same colour as the cutpoint
+            #if yes, then find the neighbour with the next colour of the cutpoint and swap their colours
+            for neighbour in self.graph.adjacency_list[cutpoint]:
+                if self.graph.vertices_color[neighbour] == self.graph.vertices_color[cutpoint]:
+                    next_colour = get_next_colour(self.graph.vertices_color[cutpoint])
+                    for neighbour in self.graph.adjacency_list[cutpoint]:
+                        if self.graph.vertices_color[neighbour] == next_colour:
+                            self.graph.vertices_color[neighbour] = self.graph.vertices_color[cutpoint]
+                            self.graph.vertices_color[cutpoint] = next_colour
+                            break  
 
     def colour_remaining_vertices(self):
         none_coloured_vertices = [vertex for vertex in self.graph.vertices if self.graph.vertices_color[vertex] is None]
