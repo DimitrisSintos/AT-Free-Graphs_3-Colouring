@@ -2,4 +2,6 @@
 *__pycache__*
 output-graphs/*
 *.vscode
+src/*__pycache__*
+
 

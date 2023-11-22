@@ -28,7 +28,8 @@
 
 ## Usage
 
-Run the program using Python 3. You can optionally provide an input graph file (check input-graph.json for an example):
+Run the program using Python 3. You can optionally provide an input graph file (check input-graphs folder for an examples):
 
 ```bash
+cd src
 python3 main.py <optional-input-graph.json>
