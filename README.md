@@ -11,7 +11,7 @@
 2. Create a Python virtual environment:
 
     ```bash
-    python -m venv .venv --prompt AT-free-3-colouring
+    python3 -m venv .venv --prompt AT-free-3-colouring
     ```
 
 3. Activate the virtual environment:
