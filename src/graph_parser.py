@@ -17,33 +17,33 @@ class GraphParser:
         # Verify if we got the correct number of edges
         if len(edges) != num_of_edges:
             raise ValueError("The number of edges specified does not match the number of edges parsed.")
-        
+
         if GraphParser.has_asteroidal_triple(num_of_vertices, edges):
             raise ValueError("The graph is no AT-free.")
         else:
             return Graph(num_of_vertices, num_of_edges, edges)
 
-        
-
-
-    
     @staticmethod
     def has_asteroidal_triple(num_of_vertices, edges):
         # Create a graph
         G = nx.Graph()
         G.add_nodes_from(range(num_of_vertices))
+        print("edges",edges)
         G.add_edges_from(edges)
+        print("G",G)
 
         # Generate all possible combinations of 3 vertices
         vertex_combinations = combinations(range(num_of_vertices), 3)
 
         # Check for each combination
         for v1, v2, v3 in vertex_combinations:
-            if GraphParser.has_path_avoiding_neighbors(G, v1, v2, v3) and GraphParser.has_path_avoiding_neighbors(G, v2, v3, v1) and GraphParser.has_path_avoiding_neighbors(G, v3, v1, v2):
+            if GraphParser.has_path_avoiding_neighbors(G, v1, v2, v3) \
+                    and GraphParser.has_path_avoiding_neighbors(G, v2,v3,v1) \
+                        and GraphParser.has_path_avoiding_neighbors(G, v3, v1, v2):
                 print("Found an asteroidal triple: ", v1, v2, v3)
                 return True
         return False
-    
+
     @staticmethod
     def has_path_avoiding_neighbors(G, source, target, avoid):
         """

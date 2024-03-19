@@ -136,9 +136,7 @@ class Graph:
     
     def edge_exists(self, u, v):
         return (u, v) in self.edges or (v, u) in self.edges
-
-        
-
+    
     
     def copy(self):
         return Graph(self.num_of_vertices, self.num_of_edges, self.edges, self.vertices)

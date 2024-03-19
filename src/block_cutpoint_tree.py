@@ -30,10 +30,8 @@ class BlockCutpointTree:
                         print("(i,j)",(i,j))
                         edges.add((i,j))
 
-        print("vertices",vertices)
         #vertices to string 
         vertices = set(str(v) for v in vertices)
-        print("edges",edges)
     
         return Graph(len(vertices),len(edges),edges, vertices)
 
