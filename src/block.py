@@ -2,6 +2,8 @@ from utilities import *
 from itertools import combinations
 from graph import Graph
 
+# The `Block` class in Python represents a block in a graph and includes methods for finding minimal
+# stable separators and checking connectivity.
 class Block(Graph):
     def __init__(self, vertices, edges):
         num_of_vertices = len(vertices)

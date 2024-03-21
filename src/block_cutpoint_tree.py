@@ -1,6 +1,8 @@
 from graph import Graph
 from pyvis.network import Network
 
+# The `BlockCutpointTree` class creates a tree structure where blocks are nodes and blocks sharing a
+# cutpoint are connected by an edge, with methods to navigate and display the tree.
 class BlockCutpointTree:
     current_block = None 
 

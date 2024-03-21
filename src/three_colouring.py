@@ -6,7 +6,7 @@ class ThreeColouring:
     def __init__(self,graph, initial_graph):
         self.graph = graph
         self.initial_graph = initial_graph
-        self.previous_triangle = None
+        self.previous_triangle = []
         
     def construct_three_colouring(self):
         print("constructing three colouring...")
@@ -77,32 +77,31 @@ class ThreeColouring:
             if vertex  != cutpoint:
                 self.graph.vertices_color[vertex] = available_colors.pop()
 
-    def colour_trianglular_strip(self,triangular_strip, next_vertex=None,is_cutpoint=False):
+    def colour_trianglular_strip(self, triangular_strip, next_vertex=None, is_cutpoint=False):
         if triangular_strip.num_of_vertices == 6:
-            #then the triangular strip is a prism
-            print("next vertex:",next_vertex)
+            # then the triangular strip is a prism
             self.colour_prism(triangular_strip, next_vertex)
             return
-        
+
         if next_vertex is None:
-            first_triangle,next_vertex = self.find_init_triangle_in_strip(triangular_strip)
+            first_triangle, next_vertex = self.find_init_triangle_in_strip(triangular_strip)
             self.colour_triangle(first_triangle)
             self.previous_triangle = first_triangle
             triangular_strip = triangular_strip.delete_vertices(first_triangle)
             self.colour_trianglular_strip(triangular_strip, next_vertex)
-        elif next_vertex is not None and is_cutpoint:
-            triangle,next_vertex = self.find_triangle_in_strip(next_vertex,triangular_strip)
+        elif next_vertex is not None and next_vertex in self.graph.cutpoints:
+            triangle, next_vertex = self.find_triangle_in_strip(next_vertex, triangular_strip)
             self.colour_triangle(triangle)
             self.previous_triangle = triangle
             triangular_strip = triangular_strip.delete_vertices(triangle)
             self.colour_trianglular_strip(triangular_strip, next_vertex)
         else:
-            triangle,next_vertex = self.find_triangle_in_strip(next_vertex,triangular_strip)
+            triangle, next_vertex = self.find_triangle_in_strip(next_vertex, triangular_strip)
             self.colour_triangle_of_trianglular_strip(triangle)
             self.previous_triangle = triangle
             triangular_strip = triangular_strip.delete_vertices(triangle)
             self.colour_trianglular_strip(triangular_strip, next_vertex)
-            
+                
         
     def find_init_triangle_in_strip(self,triangular_strip):
         for vertex in triangular_strip.vertices:
@@ -131,23 +130,17 @@ class ThreeColouring:
                     self.graph.vertices_color[vertex] = get_next_colour(previous_vertex_color)
                     break
 
-    def colour_prism(self,prism,next_vertex):
+    def colour_prism(self, prism, next_vertex):
         first_triangle, second_triangle = self.find_triangles_in_prism(prism)
 
-        if next_vertex is None:
+        if next_vertex is None or next_vertex in first_triangle:
             self.colour_triangle(first_triangle)
             self.previous_triangle = first_triangle
             self.colour_triangle_of_trianglular_strip(second_triangle)
-
         else:
-            if next_vertex in first_triangle:
-                self.colour_triangle_of_trianglular_strip(first_triangle)
-                self.previous_triangle = first_triangle
-                self.colour_triangle_of_trianglular_strip(second_triangle)
-            else:
-                self.colour_triangle_of_trianglular_strip(second_triangle)
-                self.previous_triangle = second_triangle
-                self.colour_triangle_of_trianglular_strip(first_triangle)
+            self.colour_triangle_of_trianglular_strip(second_triangle)
+            self.previous_triangle = second_triangle
+            self.colour_triangle_of_trianglular_strip(first_triangle)
             
 
     def find_triangles_in_prism(self,prism):

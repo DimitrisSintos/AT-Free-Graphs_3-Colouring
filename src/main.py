@@ -1,6 +1,7 @@
 from graph import Graph
 from tarjans_biconnectivity import TarjansBiconnectivity
 from polynomial_time_algorithm import PolynomialTimeAlgorithm
+from check_algorithm_correctness import CheckAlgorithmCorrectness
 
 from graph_parser import GraphParser
 
@@ -43,6 +44,9 @@ def main(argv):
     AT_free_graph.show()
     algorithm = PolynomialTimeAlgorithm(AT_free_graph)
     algorithm.run()
+    
+    check_algorithm_correctness = CheckAlgorithmCorrectness(AT_free_graph)
+    print(check_algorithm_correctness.run())
 
 
 if __name__ == "__main__":
