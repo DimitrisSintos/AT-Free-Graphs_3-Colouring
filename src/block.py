@@ -13,6 +13,8 @@ class Block(Graph):
     
     def find_minimal_stable_separator(self, x):
         x_neighbors = self.adjacency_list[x]
+        if len(x_neighbors) < 2:
+            return False, None
         cond, stable_cutset = self.find_stable_cutset(x, x_neighbors)
         
         if cond:
@@ -105,6 +107,9 @@ class Block(Graph):
 
     def copy(self):
         return Block(self.vertices.copy(), self.edges.copy())
+    
+    def __str__(self):
+        return f"Vertices: {self.vertices}, Edges: {self.edges}"
         
     
     

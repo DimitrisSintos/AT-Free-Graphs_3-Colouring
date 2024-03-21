@@ -39,7 +39,6 @@ class Graph:
             disjoint_edges = set( (x,y) for (x,y) in self.edges if x not in (u,v) and y not in (u,v))
             for across_edge in disjoint_edges:
                 x, y = across_edge
-                edges_found = 0 
                 if ( ( (x,u) in self.edges or (u,x) in self.edges )
                      and ( (y,v) in self.edges or (v,y) in self.edges ) 
                        and ( (x,v) in self.edges or (v,x) in self.edges ) 
